@@ -106,6 +106,8 @@ namespace MagazinePatcher
         [JsonIgnore]
         public FVRObject AmmoObject;
 
+        public AmmoObjectDataTemplate() { }
+
         public AmmoObjectDataTemplate(FVRFireArmMagazine mag)
         {
             ObjectID = mag.ObjectWrapper.ItemID;

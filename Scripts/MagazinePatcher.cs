@@ -152,15 +152,21 @@ namespace MagazinePatcher
                     magazineCache = JsonConvert.DeserializeObject<CompatibleMagazineCache>(cacheJson);
 
                     isCacheValid = IsMagazineCacheValid(magazineCache);
+
+                    PatchLogger.Log("Cache file found! Is Valid? " + isCacheValid, PatchLogger.LogType.General);
                 }
-                catch
+                catch(Exception e)
                 {
                     magazineCache = new CompatibleMagazineCache();
+
+                    PatchLogger.LogError("Failed to read cache file!");
+                    PatchLogger.LogError(e.ToString());
                 }
             }
 
             else
             {
+                PatchLogger.Log("Cache file not found!", PatchLogger.LogType.General);
                 magazineCache = new CompatibleMagazineCache();
             }
 
