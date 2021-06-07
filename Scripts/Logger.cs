@@ -10,7 +10,7 @@ namespace MagazinePatcher
     {
         public static ManualLogSource BepLog;
 
-        public static bool AllowLogging = false;
+        public static bool AllowLogging = true;
 
         public enum LogType
         {

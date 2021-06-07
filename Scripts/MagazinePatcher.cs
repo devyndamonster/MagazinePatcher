@@ -22,7 +22,15 @@ namespace MagazinePatcher
         {
             SetupOutputDirectory();
 
+            PatchLogger.Init();
+
             Stages.Runtime += OnRuntime;
+        }
+
+        private void OnRuntime(RuntimeStage runtime)
+        {
+            PatchLogger.Log("MagazinePatcher runtime has started!", PatchLogger.LogType.General);
+            Sodalite.CoroutineUtils.RunAnvilCoroutine(LoadMagazineCacheAsync());
         }
 
 
@@ -36,10 +44,7 @@ namespace MagazinePatcher
             }
         }
 
-        private void OnRuntime(RuntimeStage runtime)
-        {
-            Sodalite.CoroutineUtils.RunAnvilCoroutine(LoadMagazineCacheAsync());
-        }
+        
 
 
         private static Dictionary<string, MagazineBlacklistEntry> GetMagazineCacheBlacklist()
@@ -103,6 +108,8 @@ namespace MagazinePatcher
 
         private static IEnumerator LoadMagazineCacheAsync()
         {
+            PatchLogger.Log("Patching has started", PatchLogger.LogType.General);
+
             bool canCache = false;
             bool isOtherloaderLoaded = false;
 
@@ -184,6 +191,7 @@ namespace MagazinePatcher
                         start = DateTime.Now;
                         PatchLogger.Log("-- " + ((int)(((float)progress) / totalObjects * 100)) + "% --", PatchLogger.LogType.General);
                     }
+                    PatcherStatus.UpdateProgress(Mathf.Min((float)progress / totalObjects, 0.95f));
                     progress += 1;
 
                     LastTouchedItem = magazine.ItemID;
@@ -216,6 +224,7 @@ namespace MagazinePatcher
                         start = DateTime.Now;
                         PatchLogger.Log("-- " + ((int)(((float)progress) / totalObjects * 100)) + "% --", PatchLogger.LogType.General);
                     }
+                    PatcherStatus.UpdateProgress(Mathf.Min((float)progress / totalObjects, 0.95f));
                     progress += 1;
 
                     LastTouchedItem = clip.ItemID;
@@ -248,6 +257,7 @@ namespace MagazinePatcher
                         start = DateTime.Now;
                         PatchLogger.Log("-- " + ((int)(((float)progress) / totalObjects * 100)) + "% --", PatchLogger.LogType.General);
                     }
+                    PatcherStatus.UpdateProgress(Mathf.Min((float)progress / totalObjects, 0.95f));
                     progress += 1;
 
                     LastTouchedItem = bullet.ItemID;
@@ -280,6 +290,7 @@ namespace MagazinePatcher
                         start = DateTime.Now;
                         PatchLogger.Log("-- " + ((int)(((float)progress) / totalObjects * 100)) + "% --", PatchLogger.LogType.General);
                     }
+                    PatcherStatus.UpdateProgress(Mathf.Min((float)progress / totalObjects, 0.95f));
                     progress += 1;
 
                     LastTouchedItem = firearm.ItemID;
@@ -357,6 +368,8 @@ namespace MagazinePatcher
 
             PatchLogger.Log("Applying magazine cache to firearms", PatchLogger.LogType.General);
             ApplyMagazineCache(magazineCache, blacklist);
+
+            PatcherStatus.UpdateProgress(1);
         }
 
 
