@@ -5,7 +5,7 @@ MagazinePatcher is an H3VR mod which assigns more magazines to compatible firear
 
 **Did You Know:** Normally, magazines and clips are assigned to firearms by hand in H3VR?
 
-This is not ideal, as some firearms can only spawn with one or two magazines, when it ***could*** spawn with several!
+This is not ideal, as some firearms can only spawn with one or two magazines, when it ***could*** spawn with several! This mod aims to fix that, by assigning compatible magazines programatically.
 
 ### Why should you use MagazinePatcher?
 - It allows modded weapons to spawn with magazines
