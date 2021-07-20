@@ -30,13 +30,13 @@ namespace MagazinePatcher
         private void OnRuntime(RuntimeStage runtime)
         {
             PatchLogger.Log("MagazinePatcher runtime has started!", PatchLogger.LogType.General);
-            Sodalite.CoroutineUtils.RunAnvilCoroutine(LoadMagazineCacheAsync());
+            AnvilManager.Instance.StartCoroutine(LoadMagazineCacheAsync());
         }
 
 
         private void SetupOutputDirectory()
         {
-            FolderPath = Application.dataPath.Replace("/h3vr_Data", "/MagazinePatcher");
+            FolderPath = Application.dataPath.Replace("/h3vr_Data", "/BepInEx/plugins/Devyndamonster-MagazinePatcher");
 
             if (!Directory.Exists(FolderPath))
             {
@@ -108,6 +108,9 @@ namespace MagazinePatcher
 
         private static IEnumerator LoadMagazineCacheAsync()
         {
+            Debug.Log("Patch wait");
+            yield return new WaitForSeconds(5);
+
             PatchLogger.Log("Patching has started", PatchLogger.LogType.General);
 
             bool canCache = false;
@@ -206,7 +209,9 @@ namespace MagazinePatcher
                     if (!magazineCache.Magazines.Contains(magazine.ItemID))
                     {
                         gameObjectCallback = magazine.GetGameObjectAsync();
-                        yield return gameObjectCallback;
+                        Debug.Log("Start: " + magazine.ItemID);
+                        yield return AnvilManager.Instance.RunDriven(gameObjectCallback);
+                        Debug.Log("End: " + magazine.ItemID);
                         if (gameObjectCallback.Result == null) PatchLogger.LogError("No object was found to use FVRObject! ItemID: " + magazine.ItemID);
 
                         FVRFireArmMagazine magComp = gameObjectCallback.Result.GetComponent<FVRFireArmMagazine>();
@@ -239,7 +244,7 @@ namespace MagazinePatcher
                     if (!magazineCache.Clips.Contains(clip.ItemID))
                     {
                         gameObjectCallback = clip.GetGameObjectAsync();
-                        yield return gameObjectCallback;
+                        yield return AnvilManager.Instance.RunDriven(gameObjectCallback);
                         if (gameObjectCallback.Result == null) PatchLogger.LogError("No object was found to use FVRObject! ItemID: " + clip.ItemID);
 
                         FVRFireArmClip clipComp = gameObjectCallback.Result.GetComponent<FVRFireArmClip>();
@@ -272,7 +277,7 @@ namespace MagazinePatcher
                     if (!magazineCache.Bullets.Contains(bullet.ItemID))
                     {
                         gameObjectCallback = bullet.GetGameObjectAsync();
-                        yield return gameObjectCallback;
+                        yield return AnvilManager.Instance.RunDriven(gameObjectCallback);
                         if (gameObjectCallback.Result == null) PatchLogger.LogError("No object was found to use FVRObject! ItemID: " + bullet.ItemID);
 
                         FVRFireArmRound bulletComp = gameObjectCallback.Result.GetComponent<FVRFireArmRound>();
@@ -305,7 +310,7 @@ namespace MagazinePatcher
                     if (!magazineCache.Firearms.Contains(firearm.ItemID))
                     {
                         gameObjectCallback = firearm.GetGameObjectAsync();
-                        yield return gameObjectCallback;
+                        yield return AnvilManager.Instance.RunDriven(gameObjectCallback);
                         if (gameObjectCallback.Result == null) PatchLogger.LogError("No object was found to use FVRObject! ItemID: " + firearm.ItemID);
 
                         FVRFireArm firearmComp = gameObjectCallback.Result.GetComponent<FVRFireArm>();
