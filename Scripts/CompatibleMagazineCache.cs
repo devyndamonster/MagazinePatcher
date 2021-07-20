@@ -21,6 +21,10 @@ namespace MagazinePatcher
         public Dictionary<FireArmClipType, List<AmmoObjectDataTemplate>> ClipData;
         public Dictionary<FireArmRoundType, List<AmmoObjectDataTemplate>> BulletData;
 
+        public static CompatibleMagazineCache Instance;
+
+        public static Dictionary<string, MagazineBlacklistEntry> BlacklistEntries;
+
 
         public CompatibleMagazineCache()
         {
@@ -35,6 +39,8 @@ namespace MagazinePatcher
             MagazineData = new Dictionary<FireArmMagazineType, List<AmmoObjectDataTemplate>>();
             ClipData = new Dictionary<FireArmClipType, List<AmmoObjectDataTemplate>>();
             BulletData = new Dictionary<FireArmRoundType, List<AmmoObjectDataTemplate>>();
+
+            BlacklistEntries = new Dictionary<string, MagazineBlacklistEntry>();
         }
 
         public void AddMagazineData(FVRFireArmMagazine mag)
@@ -98,6 +104,8 @@ namespace MagazinePatcher
         }
     }
 
+
+    //TODO this is totally unnecessary if we just write a custom serializer for FVRObjects. We should do that eventually!
     public class AmmoObjectDataTemplate
     {
         public string ObjectID;
@@ -143,6 +151,11 @@ namespace MagazinePatcher
             MagazineBlacklist = new List<string>();
             ClipBlacklist = new List<string>();
             RoundBlacklist = new List<string>();
+        }
+
+        public bool IsItemBlacklisted(string itemID)
+        {
+            return MagazineBlacklist.Contains(itemID) || ClipBlacklist.Contains(itemID) || RoundBlacklist.Contains(itemID);
         }
     }
 }
