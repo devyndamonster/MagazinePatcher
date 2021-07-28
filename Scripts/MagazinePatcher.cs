@@ -62,6 +62,8 @@ namespace MagazinePatcher
                 //If the magazine blacklist file does not exist, we'll create a new sample one
                 if (!File.Exists(path))
                 {
+                    PatchLogger.Log("Blacklist does not exist! Building new one", PatchLogger.LogType.General);
+
                     StreamWriter sw = File.CreateText(path);
                     List<MagazineBlacklistEntry> blacklistSerialized = new List<MagazineBlacklistEntry>();
 
@@ -88,16 +90,21 @@ namespace MagazinePatcher
                     string blacklistString = File.ReadAllText(path);
                     List<MagazineBlacklistEntry> blacklistDeserialized = JsonConvert.DeserializeObject<List<MagazineBlacklistEntry>>(blacklistString);
 
+                    PatchLogger.Log("Loaded blacklist from file! Entry count: " + blacklistDeserialized.Count, PatchLogger.LogType.General);
+
                     foreach (MagazineBlacklistEntry entry in blacklistDeserialized)
                     {
                         blacklist.Add(entry.FirearmID, entry);
+                        PatchLogger.Log("Blacklist for item: " + entry.FirearmID, PatchLogger.LogType.General);
+                        PatchLogger.Log(string.Join(",", entry.MagazineBlacklist.ToArray()), PatchLogger.LogType.General);
                     }
                 }
             }
 
             catch (Exception ex)
             {
-                //TODO print something
+                PatchLogger.LogError("Failed to load magazine blacklist!");
+                PatchLogger.LogError(ex.ToString());
             }
 
             return blacklist;
@@ -144,8 +151,7 @@ namespace MagazinePatcher
             } while (!canCache && isOtherloaderLoaded);
 
             PatcherStatus.AppendCacheLog("Caching Started");
-            CompatibleMagazineCache.BlacklistEntries = GetMagazineCacheBlacklist();
-
+            
             bool isCacheValid = false;
             string cachePath = FolderPath + "/CachedCompatibleMags.json";
 
@@ -155,7 +161,8 @@ namespace MagazinePatcher
                 try
                 {
                     string cacheJson = File.ReadAllText(cachePath);
-                    CompatibleMagazineCache.Instance = JsonConvert.DeserializeObject<CompatibleMagazineCache>(cacheJson);
+                    CompatibleMagazineCache cache = JsonConvert.DeserializeObject<CompatibleMagazineCache>(cacheJson);
+                    CompatibleMagazineCache.Instance = cache;
 
                     isCacheValid = IsMagazineCacheValid(CompatibleMagazineCache.Instance);
 
@@ -163,7 +170,8 @@ namespace MagazinePatcher
                 }
                 catch(Exception e)
                 {
-                    CompatibleMagazineCache.Instance = new CompatibleMagazineCache();
+                    CompatibleMagazineCache cache = new CompatibleMagazineCache();
+                    CompatibleMagazineCache.Instance = cache;
 
                     PatchLogger.LogError("Failed to read cache file!");
                     PatchLogger.LogError(e.ToString());
@@ -173,10 +181,11 @@ namespace MagazinePatcher
             else
             {
                 PatchLogger.Log("Cache file not found!", PatchLogger.LogType.General);
-                CompatibleMagazineCache.Instance = new CompatibleMagazineCache();
+                CompatibleMagazineCache cache = new CompatibleMagazineCache();
+                CompatibleMagazineCache.Instance = cache;
             }
 
-
+            CompatibleMagazineCache.BlacklistEntries = GetMagazineCacheBlacklist();
 
             //If the magazine cache file didn't exist, or wasn't valid, we must build a new one
             if (!isCacheValid)
@@ -411,9 +420,24 @@ namespace MagazinePatcher
 
                     foreach (string mag in entry.CompatibleMagazines)
                     {
-                        if (IM.OD.ContainsKey(mag) && (!blacklist.ContainsKey(firearm.ItemID) || !blacklist[firearm.ItemID].MagazineBlacklist.Contains(mag)))
+
+                        //true && (!true || !true)
+                        if (IM.OD.ContainsKey(mag) && ((!blacklist.ContainsKey(firearm.ItemID)) || (!blacklist[firearm.ItemID].MagazineBlacklist.Contains(mag))))
                         {
                             FVRObject magazineObject = IM.OD[mag];
+
+                            if (entry.FirearmID == "SKSClassic")
+                            {
+                                PatchLogger.Log("Caching (" + entry.FirearmID + ") with mag (" + mag + ")", PatchLogger.LogType.General);
+                                PatchLogger.Log($"Is item in blacklist : {blacklist.ContainsKey(firearm.ItemID)}", PatchLogger.LogType.General);
+
+                                if (blacklist.ContainsKey(firearm.ItemID))
+                                {
+                                    PatchLogger.Log($"Is mag in blacklist : {blacklist[firearm.ItemID].MagazineBlacklist.Contains(mag)}", PatchLogger.LogType.General);
+                                }
+                                
+                            }
+                            
 
                             firearm.CompatibleMagazines.Add(magazineObject);
                             if (magazineCache.AmmoObjects.ContainsKey(mag)) magazineObject.MagazineCapacity = magazineCache.AmmoObjects[mag].Capacity;

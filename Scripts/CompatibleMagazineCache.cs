@@ -43,6 +43,11 @@ namespace MagazinePatcher
             BlacklistEntries = new Dictionary<string, MagazineBlacklistEntry>();
         }
 
+        public void PrintBlacklist()
+        {
+            if(BlacklistEntries.coun)
+        }
+
         public void AddMagazineData(FVRFireArmMagazine mag)
         {
             if (!MagazineData.ContainsKey(mag.MagazineType))
@@ -142,15 +147,12 @@ namespace MagazinePatcher
     public class MagazineBlacklistEntry
     {
         public string FirearmID;
-        public List<string> MagazineBlacklist;
-        public List<string> ClipBlacklist;
-        public List<string> RoundBlacklist;
+        public List<string> MagazineBlacklist = new List<string>();
+        public List<string> ClipBlacklist = new List<string>();
+        public List<string> RoundBlacklist = new List<string>();
 
         public MagazineBlacklistEntry()
         {
-            MagazineBlacklist = new List<string>();
-            ClipBlacklist = new List<string>();
-            RoundBlacklist = new List<string>();
         }
 
         public bool IsItemBlacklisted(string itemID)
