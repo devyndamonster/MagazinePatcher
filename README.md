@@ -1,4 +1,5 @@
 # MagazinePatcher
+
 #### Better Magazine Spawning!
 
 MagazinePatcher is an H3VR mod which assigns more magazines to compatible firearms. 
