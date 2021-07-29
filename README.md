@@ -1,4 +1,5 @@
 # MagazinePatcher
+
 #### Better Magazine Spawning!
 
 MagazinePatcher is an H3VR mod which assigns more magazines to compatible firearms. 
@@ -20,4 +21,9 @@ This is not ideal, as some firearms can only spawn with one or two magazines, wh
 #### Magazines that can spawn with MagazinePatcher
 <a href="https://i.imgur.com/Eb0zFme"><img src="https://i.imgur.com/Eb0zFme.jpg" title="source: imgur.com" height="300"/></a>
 
-
+## Installation
+1. Install the [Deli Mod Loader](https://github.com/Deli-Counter/Deli)
+    - Deli requires the x64 version of BepInEx, you can find installation instructions for that [here](https://bepinex.github.io/bepinex_docs/master/articles/user_guide/installation/index.html?tabs=tabid-win)
+    - By default the games root folder path is `C:\Program Files (x86)\Steam\steamapps\common\H3VR`
+3. Download the `Devyndamonster-MagazinePatcher.zip` from the [releases page](https://github.com/devyndamonster/MagazinePatcher/releases/tag/v0.1.0)
+4. Extract that zip file into your `BepInEx/plugins` folder
