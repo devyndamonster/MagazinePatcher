@@ -43,10 +43,6 @@ namespace MagazinePatcher
             BlacklistEntries = new Dictionary<string, MagazineBlacklistEntry>();
         }
 
-        public void PrintBlacklist()
-        {
-            if(BlacklistEntries.coun)
-        }
 
         public void AddMagazineData(FVRFireArmMagazine mag)
         {
@@ -148,8 +144,11 @@ namespace MagazinePatcher
     {
         public string FirearmID;
         public List<string> MagazineBlacklist = new List<string>();
+        public List<string> MagazineWhitelist = new List<string>();
         public List<string> ClipBlacklist = new List<string>();
+        public List<string> ClipWhitelist = new List<string>();
         public List<string> RoundBlacklist = new List<string>();
+        public List<string> RoundWhitelist = new List<string>();
 
         public MagazineBlacklistEntry()
         {
@@ -158,6 +157,33 @@ namespace MagazinePatcher
         public bool IsItemBlacklisted(string itemID)
         {
             return MagazineBlacklist.Contains(itemID) || ClipBlacklist.Contains(itemID) || RoundBlacklist.Contains(itemID);
+        }
+
+        public bool IsMagazineAllowed(string itemID)
+        {
+            if(MagazineWhitelist.Count > 0 && (!MagazineWhitelist.Contains(itemID))) return false;
+
+            if (MagazineBlacklist.Contains(itemID)) return false;
+
+            return true;
+        }
+
+        public bool IsClipAllowed(string itemID)
+        {
+            if (ClipWhitelist.Count > 0 && (!ClipWhitelist.Contains(itemID))) return false;
+
+            if (ClipBlacklist.Contains(itemID)) return false;
+
+            return true;
+        }
+
+        public bool IsRoundAllowed(string itemID)
+        {
+            if (RoundWhitelist.Count > 0 && (!RoundWhitelist.Contains(itemID))) return false;
+
+            if (RoundWhitelist.Contains(itemID)) return false;
+
+            return true;
         }
     }
 }

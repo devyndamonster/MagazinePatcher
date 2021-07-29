@@ -420,24 +420,9 @@ namespace MagazinePatcher
 
                     foreach (string mag in entry.CompatibleMagazines)
                     {
-
-                        //true && (!true || !true)
-                        if (IM.OD.ContainsKey(mag) && ((!blacklist.ContainsKey(firearm.ItemID)) || (!blacklist[firearm.ItemID].MagazineBlacklist.Contains(mag))))
+                        if (IM.OD.ContainsKey(mag) && (!firearm.CompatibleMagazines.Any(o => o.ItemID == mag)) && ((!blacklist.ContainsKey(firearm.ItemID)) || blacklist[firearm.ItemID].IsMagazineAllowed(mag)))
                         {
                             FVRObject magazineObject = IM.OD[mag];
-
-                            if (entry.FirearmID == "SKSClassic")
-                            {
-                                PatchLogger.Log("Caching (" + entry.FirearmID + ") with mag (" + mag + ")", PatchLogger.LogType.General);
-                                PatchLogger.Log($"Is item in blacklist : {blacklist.ContainsKey(firearm.ItemID)}", PatchLogger.LogType.General);
-
-                                if (blacklist.ContainsKey(firearm.ItemID))
-                                {
-                                    PatchLogger.Log($"Is mag in blacklist : {blacklist[firearm.ItemID].MagazineBlacklist.Contains(mag)}", PatchLogger.LogType.General);
-                                }
-                                
-                            }
-                            
 
                             firearm.CompatibleMagazines.Add(magazineObject);
                             if (magazineCache.AmmoObjects.ContainsKey(mag)) magazineObject.MagazineCapacity = magazineCache.AmmoObjects[mag].Capacity;
@@ -449,7 +434,7 @@ namespace MagazinePatcher
                     }
                     foreach (string clip in entry.CompatibleClips)
                     {
-                        if (IM.OD.ContainsKey(clip) && (!blacklist.ContainsKey(firearm.ItemID) || !blacklist[firearm.ItemID].ClipBlacklist.Contains(clip)))
+                        if (IM.OD.ContainsKey(clip) && (!firearm.CompatibleClips.Any(o => o.ItemID == clip)) && ((!blacklist.ContainsKey(firearm.ItemID)) || blacklist[firearm.ItemID].IsClipAllowed(clip)))
                         {
                             FVRObject clipObject = IM.OD[clip];
 
@@ -463,7 +448,7 @@ namespace MagazinePatcher
                     }
                     foreach (string bullet in entry.CompatibleBullets)
                     {
-                        if (IM.OD.ContainsKey(bullet) && (!blacklist.ContainsKey(firearm.ItemID) || !blacklist[firearm.ItemID].RoundBlacklist.Contains(bullet)))
+                        if (IM.OD.ContainsKey(bullet) && (!firearm.CompatibleSingleRounds.Any(o => o.ItemID == bullet)) && ((!blacklist.ContainsKey(firearm.ItemID)) || blacklist[firearm.ItemID].IsRoundAllowed(bullet)))
                         {
                             firearm.CompatibleSingleRounds.Add(IM.OD[bullet]);
                         }
