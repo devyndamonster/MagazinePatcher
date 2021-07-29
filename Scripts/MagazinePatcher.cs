@@ -16,13 +16,15 @@ namespace MagazinePatcher
     public class MagazinePatcher : DeliBehaviour
     {
         private static string FolderPath;
+        private static string CachePath;
+        private static string BlacklistPath;
         private static string LastTouchedItem;
 
         private void Awake()
         {
-            SetupOutputDirectory();
-
             PatchLogger.Init();
+
+            SetupPaths();
 
             Stages.Runtime += OnRuntime;
         }
@@ -40,14 +42,11 @@ namespace MagazinePatcher
         }
 
 
-        private void SetupOutputDirectory()
+        private void SetupPaths()
         {
-            FolderPath = Application.dataPath.Replace("/h3vr_Data", "/BepInEx/plugins/Devyndamonster-MagazinePatcher");
-
-            if (!Directory.Exists(FolderPath))
-            {
-                Directory.CreateDirectory(FolderPath);
-            }
+            FolderPath = Directory.GetDirectories(BepInEx.Paths.PluginPath, "devyndamonster-MagazinePatcher*", SearchOption.AllDirectories)[0];
+            CachePath = Path.Combine(FolderPath, "CachedCompatibleMags.json");
+            BlacklistPath = Path.Combine(FolderPath, "MagazineCacheBlacklist.json");
         }
 
 
@@ -57,14 +56,13 @@ namespace MagazinePatcher
 
             try
             {
-                string path = FolderPath + "/MagazineCacheBlacklist.json";
-
+                
                 //If the magazine blacklist file does not exist, we'll create a new sample one
-                if (!File.Exists(path))
+                if (!File.Exists(BlacklistPath))
                 {
                     PatchLogger.Log("Blacklist does not exist! Building new one", PatchLogger.LogType.General);
 
-                    StreamWriter sw = File.CreateText(path);
+                    StreamWriter sw = File.CreateText(BlacklistPath);
                     List<MagazineBlacklistEntry> blacklistSerialized = new List<MagazineBlacklistEntry>();
 
                     MagazineBlacklistEntry sample = new MagazineBlacklistEntry();
@@ -87,16 +85,12 @@ namespace MagazinePatcher
                 //If the file does exist, we'll try to deserialize it
                 else
                 {
-                    string blacklistString = File.ReadAllText(path);
+                    string blacklistString = File.ReadAllText(BlacklistPath);
                     List<MagazineBlacklistEntry> blacklistDeserialized = JsonConvert.DeserializeObject<List<MagazineBlacklistEntry>>(blacklistString);
-
-                    PatchLogger.Log("Loaded blacklist from file! Entry count: " + blacklistDeserialized.Count, PatchLogger.LogType.General);
 
                     foreach (MagazineBlacklistEntry entry in blacklistDeserialized)
                     {
                         blacklist.Add(entry.FirearmID, entry);
-                        PatchLogger.Log("Blacklist for item: " + entry.FirearmID, PatchLogger.LogType.General);
-                        PatchLogger.Log(string.Join(",", entry.MagazineBlacklist.ToArray()), PatchLogger.LogType.General);
                     }
                 }
             }
@@ -153,14 +147,13 @@ namespace MagazinePatcher
             PatcherStatus.AppendCacheLog("Caching Started");
             
             bool isCacheValid = false;
-            string cachePath = FolderPath + "/CachedCompatibleMags.json";
 
             //If the cache exists, we load it and check it's validity
-            if (File.Exists(cachePath))
+            if (File.Exists(CachePath))
             {
                 try
                 {
-                    string cacheJson = File.ReadAllText(cachePath);
+                    string cacheJson = File.ReadAllText(CachePath);
                     CompatibleMagazineCache cache = JsonConvert.DeserializeObject<CompatibleMagazineCache>(cacheJson);
                     CompatibleMagazineCache.Instance = cache;
 
@@ -385,7 +378,7 @@ namespace MagazinePatcher
                 //Create the cache file 
                 PatchLogger.Log("Saving Data", PatchLogger.LogType.General);
                 PatcherStatus.AppendCacheLog("Saving");
-                using (StreamWriter sw = File.CreateText(cachePath))
+                using (StreamWriter sw = File.CreateText(CachePath))
                 {
                     string cacheString = JsonConvert.SerializeObject(CompatibleMagazineCache.Instance, Formatting.Indented, new StringEnumConverter());
                     sw.WriteLine(cacheString);
@@ -420,7 +413,7 @@ namespace MagazinePatcher
 
                     foreach (string mag in entry.CompatibleMagazines)
                     {
-                        if (IM.OD.ContainsKey(mag) && (!firearm.CompatibleMagazines.Any(o => o.ItemID == mag)) && ((!blacklist.ContainsKey(firearm.ItemID)) || blacklist[firearm.ItemID].IsMagazineAllowed(mag)))
+                        if (IM.OD.ContainsKey(mag) && (!firearm.CompatibleMagazines.Any(o => (o != null && o.ItemID == mag))) && ((!blacklist.ContainsKey(firearm.ItemID)) || blacklist[firearm.ItemID].IsMagazineAllowed(mag)))
                         {
                             FVRObject magazineObject = IM.OD[mag];
 
@@ -434,7 +427,7 @@ namespace MagazinePatcher
                     }
                     foreach (string clip in entry.CompatibleClips)
                     {
-                        if (IM.OD.ContainsKey(clip) && (!firearm.CompatibleClips.Any(o => o.ItemID == clip)) && ((!blacklist.ContainsKey(firearm.ItemID)) || blacklist[firearm.ItemID].IsClipAllowed(clip)))
+                        if (IM.OD.ContainsKey(clip) && (!firearm.CompatibleClips.Any(o => (o != null && o.ItemID == clip))) && ((!blacklist.ContainsKey(firearm.ItemID)) || blacklist[firearm.ItemID].IsClipAllowed(clip)))
                         {
                             FVRObject clipObject = IM.OD[clip];
 
@@ -448,7 +441,7 @@ namespace MagazinePatcher
                     }
                     foreach (string bullet in entry.CompatibleBullets)
                     {
-                        if (IM.OD.ContainsKey(bullet) && (!firearm.CompatibleSingleRounds.Any(o => o.ItemID == bullet)) && ((!blacklist.ContainsKey(firearm.ItemID)) || blacklist[firearm.ItemID].IsRoundAllowed(bullet)))
+                        if (IM.OD.ContainsKey(bullet) && (!firearm.CompatibleSingleRounds.Any(o => (o != null && o.ItemID == bullet))) && ((!blacklist.ContainsKey(firearm.ItemID)) || blacklist[firearm.ItemID].IsRoundAllowed(bullet)))
                         {
                             firearm.CompatibleSingleRounds.Add(IM.OD[bullet]);
                         }
