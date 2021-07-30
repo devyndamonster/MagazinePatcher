@@ -110,6 +110,11 @@ namespace MagazinePatcher
             OtherLoader.LoaderStatus.GetLoaderProgress();
         }
 
+        private static float GetOtherLoaderProgress()
+        {
+            return OtherLoader.LoaderStatus.GetLoaderProgress();
+        }
+
 
         private static IEnumerator LoadMagazineCacheAsync()
         {
@@ -139,7 +144,7 @@ namespace MagazinePatcher
 
                 if (isOtherloaderLoaded)
                 {
-                    canCache = OtherLoader.LoaderStatus.GetLoaderProgress() >= 1;
+                    canCache = GetOtherLoaderProgress() >= 1;
                 }
 
             } while (!canCache && isOtherloaderLoaded);
