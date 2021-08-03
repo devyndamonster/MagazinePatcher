@@ -111,9 +111,7 @@ namespace MagazinePatcher
     {
         public string ObjectID;
         public int Capacity;
-
-        [JsonIgnore]
-        public FVRObject AmmoObject;
+        public FireArmMagazineType MagType;
 
         public AmmoObjectDataTemplate() { }
 
@@ -121,21 +119,21 @@ namespace MagazinePatcher
         {
             ObjectID = mag.ObjectWrapper.ItemID;
             Capacity = mag.m_capacity;
-            AmmoObject = IM.OD[ObjectID];
+            MagType = mag.MagazineType;
         }
 
         public AmmoObjectDataTemplate(FVRFireArmClip clip)
         {
             ObjectID = clip.ObjectWrapper.ItemID;
             Capacity = clip.m_capacity;
-            AmmoObject = IM.OD[ObjectID];
+            MagType = FireArmMagazineType.mNone;
         }
 
         public AmmoObjectDataTemplate(FVRFireArmRound bullet)
         {
             ObjectID = bullet.ObjectWrapper.ItemID;
             Capacity = -1;
-            AmmoObject = IM.OD[ObjectID];
+            MagType = FireArmMagazineType.mNone;
         }
     }
 

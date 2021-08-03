@@ -456,6 +456,27 @@ namespace MagazinePatcher
                     if (MinCapacityRelated != -1) firearm.MinCapacityRelated = MinCapacityRelated;
                 }
             }
+
+            foreach(KeyValuePair<FireArmMagazineType, List<AmmoObjectDataTemplate>> pair in CompatibleMagazineCache.Instance.MagazineData)
+            {
+                if(!IM.CompatMags.ContainsKey(pair.Key))
+                {
+                    IM.CompatMags.Add(pair.Key, new List<FVRObject>());
+                }
+
+                List<FVRObject> loadedMags = new List<FVRObject>();
+                foreach(AmmoObjectDataTemplate magTemplate in pair.Value)
+                {
+                    if (IM.OD.ContainsKey(magTemplate.ObjectID))
+                    {
+                        FVRObject mag = IM.OD[magTemplate.ObjectID];
+                        mag.MagazineType = pair.Key;
+                        loadedMags.Add(mag);
+                    }
+                }
+                IM.CompatMags[pair.Key] = loadedMags;
+            }
+
         }
 
 
