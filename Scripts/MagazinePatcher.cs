@@ -1,7 +1,10 @@
-﻿using Deli.Newtonsoft.Json;
+﻿using Deli;
+using Deli.Newtonsoft.Json;
 using Deli.Newtonsoft.Json.Converters;
 using Deli.Runtime;
 using Deli.Setup;
+using Deli.VFS;
+using Deli.VFS.Disk;
 using FistVR;
 using System;
 using System.Collections;
@@ -23,9 +26,34 @@ namespace MagazinePatcher
         {
             PatchLogger.Init();
 
-            SetupPaths();
-
+            Stages.Setup += OnSetup;
             Stages.Runtime += OnRuntime;
+        }
+
+        private void OnSetup(SetupStage setup)
+        {
+            setup.SetupAssetLoaders[Source, "cache"] = LoadCachePath;
+            setup.SetupAssetLoaders[Source, "blacklist"] = LoadBlacklistPath;
+        }
+
+        private void LoadCachePath(SetupStage stage, Mod mod, IHandle handle)
+        {
+            if(handle is not IDiskHandle file)
+            {
+                throw new ArgumentException("Could not load cache file! Somehow the mod is not a directory!");
+            }
+
+            CachePath = file.PathOnDisk;
+        }
+
+        private void LoadBlacklistPath(SetupStage stage, Mod mod, IHandle handle)
+        {
+            if (handle is not IDiskHandle file)
+            {
+                throw new ArgumentException("Could not load cache file! Somehow the mod is not a directory!");
+            }
+
+            BlacklistPath = file.PathOnDisk;
         }
 
         private void OnRuntime(RuntimeStage runtime)
@@ -38,16 +66,6 @@ namespace MagazinePatcher
                 PatchLogger.LogError("Something bad happened while caching item: " + LastTouchedItem);
                 PatchLogger.LogError(e.ToString());
             }));
-        }
-
-
-        private void SetupPaths()
-        {
-            string[] cachePaths = Directory.GetFiles(BepInEx.Paths.PluginPath, "CachedCompatibleMags.json", SearchOption.AllDirectories);
-            string[] blacklistPaths = Directory.GetFiles(BepInEx.Paths.PluginPath, "MagazineCacheBlacklist.json", SearchOption.AllDirectories);
-
-            if (cachePaths.Length >= 1) CachePath = cachePaths[0];
-            if (blacklistPaths.Length >= 1) BlacklistPath = blacklistPaths[0];
         }
 
 
