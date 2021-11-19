@@ -18,10 +18,10 @@ This is not ideal, as some firearms can only spawn with one or two magazines, wh
 ## Comparisons with vanilla
 
 #### Magazines that can spawn in vanilla
-<a href="https://i.imgur.com/BjJHrSa"><img src="https://i.imgur.com/BjJHrSa.jpg" title="source: imgur.com" height="300"/></a>
+![Vanilla](https://i.imgur.com/BjJHrSa.jpg)
 
 #### Magazines that can spawn with MagazinePatcher
-<a href="https://i.imgur.com/Eb0zFme"><img src="https://i.imgur.com/Eb0zFme.jpg" title="source: imgur.com" height="300"/></a>
+![Patched](https://i.imgur.com/Eb0zFme.jpg)
 
 ## Installation
 1. Install the [Deli Mod Loader](https://github.com/Deli-Counter/Deli)
