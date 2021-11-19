@@ -12,15 +12,18 @@ namespace MagazinePatcher
         public List<string> Firearms;
         public List<string> Magazines;
         public List<string> Clips;
+        public List<string> SpeedLoaders;
         public List<string> Bullets;
+        
 
         public Dictionary<string, MagazineCacheEntry> Entries;
         public Dictionary<string, AmmoObjectDataTemplate> AmmoObjects;
 
         public Dictionary<FireArmMagazineType, List<AmmoObjectDataTemplate>> MagazineData;
         public Dictionary<FireArmClipType, List<AmmoObjectDataTemplate>> ClipData;
+        public Dictionary<FireArmRoundType, List<AmmoObjectDataTemplate>> SpeedLoaderData;
         public Dictionary<FireArmRoundType, List<AmmoObjectDataTemplate>> BulletData;
-
+        
         public static CompatibleMagazineCache Instance;
 
         public static Dictionary<string, MagazineBlacklistEntry> BlacklistEntries;
@@ -31,6 +34,7 @@ namespace MagazinePatcher
             Firearms = new List<string>();
             Magazines = new List<string>();
             Clips = new List<string>();
+            SpeedLoaders = new List<string>();
             Bullets = new List<string>();
 
             Entries = new Dictionary<string, MagazineCacheEntry>();
@@ -38,6 +42,7 @@ namespace MagazinePatcher
 
             MagazineData = new Dictionary<FireArmMagazineType, List<AmmoObjectDataTemplate>>();
             ClipData = new Dictionary<FireArmClipType, List<AmmoObjectDataTemplate>>();
+            SpeedLoaderData = new Dictionary<FireArmRoundType, List<AmmoObjectDataTemplate>>();
             BulletData = new Dictionary<FireArmRoundType, List<AmmoObjectDataTemplate>>();
 
             BlacklistEntries = new Dictionary<string, MagazineBlacklistEntry>();
@@ -72,6 +77,20 @@ namespace MagazinePatcher
             }
         }
 
+        public void AddSpeedLoaderData(Speedloader speedloader)
+        {
+            if (!SpeedLoaderData.ContainsKey(speedloader.Chambers[0].Type))
+            {
+                SpeedLoaderData.Add(speedloader.Chambers[0].Type, new List<AmmoObjectDataTemplate>());
+            }
+            SpeedLoaderData[speedloader.Chambers[0].Type].Add(new AmmoObjectDataTemplate(speedloader));
+
+            if (!AmmoObjects.ContainsKey(speedloader.ObjectWrapper.ItemID))
+            {
+                AmmoObjects.Add(speedloader.ObjectWrapper.ItemID, new AmmoObjectDataTemplate(speedloader));
+            }
+        }
+
         public void AddBulletData(FVRFireArmRound bullet)
         {
             if (!BulletData.ContainsKey(bullet.RoundType))
@@ -93,25 +112,30 @@ namespace MagazinePatcher
         public FireArmMagazineType MagType;
         public FireArmClipType ClipType;
         public FireArmRoundType BulletType;
+        public bool DoesUseSpeedloader;
         public List<string> CompatibleMagazines;
         public List<string> CompatibleClips;
+        public List<string> CompatibleSpeedLoaders;
         public List<string> CompatibleBullets;
+
+
 
         public MagazineCacheEntry()
         {
             CompatibleMagazines = new List<string>();
             CompatibleClips = new List<string>();
+            CompatibleSpeedLoaders = new List<string>();
             CompatibleBullets = new List<string>();
         }
     }
 
 
-    //TODO this is totally unnecessary if we just write a custom serializer for FVRObjects. We should do that eventually!
     public class AmmoObjectDataTemplate
     {
         public string ObjectID;
         public int Capacity;
         public FireArmMagazineType MagType;
+        public FireArmRoundType RoundType;
 
         public AmmoObjectDataTemplate() { }
 
@@ -120,6 +144,7 @@ namespace MagazinePatcher
             ObjectID = mag.ObjectWrapper.ItemID;
             Capacity = mag.m_capacity;
             MagType = mag.MagazineType;
+            RoundType = mag.RoundType;
         }
 
         public AmmoObjectDataTemplate(FVRFireArmClip clip)
@@ -127,6 +152,15 @@ namespace MagazinePatcher
             ObjectID = clip.ObjectWrapper.ItemID;
             Capacity = clip.m_capacity;
             MagType = FireArmMagazineType.mNone;
+            RoundType = clip.RoundType;
+        }
+
+        public AmmoObjectDataTemplate(Speedloader speedloader)
+        {
+            ObjectID = speedloader.ObjectWrapper.ItemID;
+            Capacity = speedloader.Chambers.Count;
+            MagType = FireArmMagazineType.mNone;
+            RoundType = speedloader.Chambers[0].Type;
         }
 
         public AmmoObjectDataTemplate(FVRFireArmRound bullet)
@@ -134,6 +168,7 @@ namespace MagazinePatcher
             ObjectID = bullet.ObjectWrapper.ItemID;
             Capacity = -1;
             MagType = FireArmMagazineType.mNone;
+            RoundType = bullet.RoundType;
         }
     }
 
@@ -145,6 +180,8 @@ namespace MagazinePatcher
         public List<string> MagazineWhitelist = new List<string>();
         public List<string> ClipBlacklist = new List<string>();
         public List<string> ClipWhitelist = new List<string>();
+        public List<string> SpeedLoaderBlacklist = new List<string>();
+        public List<string> SpeedLoaderWhitelist = new List<string>();
         public List<string> RoundBlacklist = new List<string>();
         public List<string> RoundWhitelist = new List<string>();
 
@@ -154,7 +191,7 @@ namespace MagazinePatcher
 
         public bool IsItemBlacklisted(string itemID)
         {
-            return MagazineBlacklist.Contains(itemID) || ClipBlacklist.Contains(itemID) || RoundBlacklist.Contains(itemID);
+            return MagazineBlacklist.Contains(itemID) || ClipBlacklist.Contains(itemID) || RoundBlacklist.Contains(itemID) || SpeedLoaderBlacklist.Contains(itemID);
         }
 
         public bool IsMagazineAllowed(string itemID)
@@ -175,11 +212,20 @@ namespace MagazinePatcher
             return true;
         }
 
+        public bool IsSpeedloaderAllowed(string itemID)
+        {
+            if (SpeedLoaderWhitelist.Count > 0 && (!SpeedLoaderWhitelist.Contains(itemID))) return false;
+
+            if (SpeedLoaderBlacklist.Contains(itemID)) return false;
+
+            return true;
+        }
+
         public bool IsRoundAllowed(string itemID)
         {
             if (RoundWhitelist.Count > 0 && (!RoundWhitelist.Contains(itemID))) return false;
 
-            if (RoundWhitelist.Contains(itemID)) return false;
+            if (RoundBlacklist.Contains(itemID)) return false;
 
             return true;
         }

@@ -71,53 +71,67 @@ namespace MagazinePatcher
 
         private static Dictionary<string, MagazineBlacklistEntry> GetMagazineCacheBlacklist()
         {
-            Dictionary<string, MagazineBlacklistEntry> blacklist = new Dictionary<string, MagazineBlacklistEntry>();
-
             try
             {
-                //If the magazine blacklist file does not exist, we'll create a new sample one
+                //If the magazine blacklist file does not exist, log an errpr
                 if (string.IsNullOrEmpty(BlacklistPath))
                 {
-                    PatchLogger.Log("Blacklist does not exist! Building new one", PatchLogger.LogType.General);
+                    throw new FileNotFoundException("The blacklist path is empty!");
+                }
 
-                    BlacklistPath = Path.Combine(BepInEx.Paths.PluginPath, "MagazineCacheBlacklist.json");
-                    StreamWriter sw = File.CreateText(BlacklistPath);
-                    List<MagazineBlacklistEntry> blacklistSerialized = new List<MagazineBlacklistEntry>();
-
-                    MagazineBlacklistEntry sample = new MagazineBlacklistEntry();
-                    sample.FirearmID = "SKSClassic";
-                    sample.MagazineBlacklist.Add("MagazineSKSModern10rnd");
-                    sample.MagazineBlacklist.Add("MagazineSKSModern20rnd");
-
-                    blacklistSerialized.Add(sample);
-
-                    string blacklistString = JsonConvert.SerializeObject(blacklistSerialized, Formatting.Indented, new StringEnumConverter());
-                    sw.WriteLine(blacklistString);
-                    sw.Close();
-
-                    foreach (MagazineBlacklistEntry entry in blacklistSerialized)
-                    {
-                        blacklist.Add(entry.FirearmID, entry);
-                    }
+                //If the blacklist file is empty, create a new one
+                string blacklistString = File.ReadAllText(BlacklistPath);
+                if (string.IsNullOrEmpty(blacklistString))
+                {
+                    return CreateNewBlacklist();
                 }
 
                 //If the file does exist, we'll try to deserialize it
                 else
                 {
-                    string blacklistString = File.ReadAllText(BlacklistPath);
+                    Dictionary<string, MagazineBlacklistEntry> blacklist = new Dictionary<string, MagazineBlacklistEntry>();
+                    
                     List<MagazineBlacklistEntry> blacklistDeserialized = JsonConvert.DeserializeObject<List<MagazineBlacklistEntry>>(blacklistString);
 
                     foreach (MagazineBlacklistEntry entry in blacklistDeserialized)
                     {
                         blacklist.Add(entry.FirearmID, entry);
                     }
+
+                    return blacklist;
                 }
             }
 
             catch (Exception ex)
             {
-                PatchLogger.LogError("Failed to load magazine blacklist!");
+                PatchLogger.LogError("Failed to load magazine blacklist! Creating new one! Stack trace below:");
                 PatchLogger.LogError(ex.ToString());
+                return CreateNewBlacklist();
+            }
+        }
+
+
+        private static Dictionary<string, MagazineBlacklistEntry> CreateNewBlacklist()
+        {
+            PatchLogger.Log("Blacklist does not exist! Building new one", PatchLogger.LogType.General);
+            Dictionary<string, MagazineBlacklistEntry> blacklist = new Dictionary<string, MagazineBlacklistEntry>();
+
+            StreamWriter sw = File.CreateText(BlacklistPath);
+            List<MagazineBlacklistEntry> blacklistEntry = new List<MagazineBlacklistEntry>();
+
+            MagazineBlacklistEntry sample = new MagazineBlacklistEntry();
+            sample.FirearmID = "SKSClassic";
+            sample.MagazineWhitelist.Add("None");
+
+            blacklistEntry.Add(sample);
+
+            string blacklistString = JsonConvert.SerializeObject(blacklistEntry, Formatting.Indented);
+            sw.WriteLine(blacklistString);
+            sw.Close();
+
+            foreach (MagazineBlacklistEntry entry in blacklistEntry)
+            {
+                blacklist.Add(entry.FirearmID, entry);
             }
 
             return blacklist;
@@ -137,9 +151,7 @@ namespace MagazinePatcher
 
         private static IEnumerator LoadMagazineCacheAsync()
         {
-            Debug.Log("Patch wait");
-            yield return new WaitForSeconds(5);
-
+            
             PatchLogger.Log("Patching has started", PatchLogger.LogType.General);
             
             bool canCache = false;
@@ -213,10 +225,11 @@ namespace MagazinePatcher
                 //Create lists of each category of item
                 List<FVRObject> magazines = IM.Instance.odicTagCategory[FVRObject.ObjectCategory.Magazine];
                 List<FVRObject> clips = IM.Instance.odicTagCategory[FVRObject.ObjectCategory.Clip];
+                List<FVRObject> speedloaders = IM.Instance.odicTagCategory[FVRObject.ObjectCategory.SpeedLoader];
                 List<FVRObject> bullets = IM.Instance.odicTagCategory[FVRObject.ObjectCategory.Cartridge];
                 List<FVRObject> firearms = IM.Instance.odicTagCategory[FVRObject.ObjectCategory.Firearm];
                 AnvilCallback<GameObject> gameObjectCallback;
-                int totalObjects = magazines.Count + clips.Count + bullets.Count + firearms.Count;
+                int totalObjects = magazines.Count + clips.Count + bullets.Count + speedloaders.Count + firearms.Count;
                 int progress = 0;
                 DateTime start = DateTime.Now;
 
@@ -294,6 +307,43 @@ namespace MagazinePatcher
                         if (clipComp != null)
                         {
                             CompatibleMagazineCache.Instance.AddClipData(clipComp);
+                        }
+                    }
+                }
+
+
+                //Loop through all clips and build a list of stripper clip components
+                PatchLogger.Log("Loading all speedloaders", PatchLogger.LogType.General);
+                PatcherStatus.AppendCacheLog("Caching Speedloaders");
+                foreach (FVRObject speedloader in speedloaders)
+                {
+                    if ((DateTime.Now - start).TotalSeconds > 2)
+                    {
+                        start = DateTime.Now;
+                        PatchLogger.Log("-- " + ((int)(((float)progress) / totalObjects * 100)) + "% --", PatchLogger.LogType.General);
+                    }
+                    PatcherStatus.UpdateProgress(Mathf.Min((float)progress / totalObjects, 0.95f));
+                    progress += 1;
+
+                    LastTouchedItem = speedloader.ItemID;
+
+                    //If this clip isn't cached, then we should store it's data
+                    if (!CompatibleMagazineCache.Instance.SpeedLoaders.Contains(speedloader.ItemID))
+                    {
+                        CompatibleMagazineCache.Instance.SpeedLoaders.Add(speedloader.ItemID);
+
+                        gameObjectCallback = speedloader.GetGameObjectAsync();
+                        yield return AnvilManager.Instance.RunDriven(gameObjectCallback);
+                        if (gameObjectCallback.Result == null)
+                        {
+                            PatchLogger.LogWarning("No object was found to use FVRObject! ItemID: " + speedloader.ItemID);
+                            continue;
+                        }
+
+                        Speedloader speedloaderComp = gameObjectCallback.Result.GetComponent<Speedloader>();
+                        if (speedloaderComp != null)
+                        {
+                            CompatibleMagazineCache.Instance.AddSpeedLoaderData(speedloaderComp);
                         }
                     }
                 }
@@ -378,6 +428,15 @@ namespace MagazinePatcher
                             entry.MagType = firearmComp.MagazineType;
                             entry.ClipType = firearmComp.ClipType;
                             entry.BulletType = firearmComp.RoundType;
+
+                            //Extra part that handles revolver capacity for speedloader compatibility
+                            Revolver revolverComp = firearmComp.gameObject.GetComponent<Revolver>();
+                            if(revolverComp != null)
+                            {
+                                entry.DoesUseSpeedloader = true;
+                                IM.OD[entry.FirearmID].MagazineCapacity = revolverComp.Chambers.Length;
+                            }
+
                             CompatibleMagazineCache.Instance.Entries.Add(firearm.ItemID, entry);
                         }
                     }
@@ -410,6 +469,17 @@ namespace MagazinePatcher
                         }
                     }
 
+                    if (entry.DoesUseSpeedloader && CompatibleMagazineCache.Instance.SpeedLoaderData.ContainsKey(entry.BulletType))
+                    {
+                        foreach (AmmoObjectDataTemplate speedloader in CompatibleMagazineCache.Instance.SpeedLoaderData[entry.BulletType])
+                        {
+                            if (!entry.CompatibleSpeedLoaders.Contains(speedloader.ObjectID) && IM.OD[entry.FirearmID].MagazineCapacity == speedloader.Capacity)
+                            {
+                                entry.CompatibleSpeedLoaders.Add(speedloader.ObjectID);
+                            }
+                        }
+                    }
+                    
                     if (CompatibleMagazineCache.Instance.BulletData.ContainsKey(entry.BulletType))
                     {
                         foreach (AmmoObjectDataTemplate bullet in CompatibleMagazineCache.Instance.BulletData[entry.BulletType])
@@ -427,7 +497,7 @@ namespace MagazinePatcher
                 PatcherStatus.AppendCacheLog("Saving");
                 using (StreamWriter sw = File.CreateText(CachePath))
                 {
-                    string cacheString = JsonConvert.SerializeObject(CompatibleMagazineCache.Instance, Formatting.Indented, new StringEnumConverter());
+                    string cacheString = JsonConvert.SerializeObject(CompatibleMagazineCache.Instance, Formatting.Indented);
                     sw.WriteLine(cacheString);
                     sw.Close();
                 }
@@ -487,6 +557,20 @@ namespace MagazinePatcher
                             else if (MinCapacityRelated > clipObject.MagazineCapacity) MinCapacityRelated = clipObject.MagazineCapacity;
                         }
                     }
+                    foreach (string speedloader in entry.CompatibleSpeedLoaders)
+                    {
+                        if (IM.OD.ContainsKey(speedloader) && (!firearm.CompatibleSpeedLoaders.Any(o => (o != null && o.ItemID == speedloader))))
+                        {
+                            FVRObject speedloaderObject = IM.OD[speedloader];
+
+                            firearm.CompatibleSpeedLoaders.Add(speedloaderObject);
+                            if (magazineCache.AmmoObjects.ContainsKey(speedloader)) speedloaderObject.MagazineCapacity = magazineCache.AmmoObjects[speedloader].Capacity;
+
+                            if (MaxCapacityRelated < speedloaderObject.MagazineCapacity) MaxCapacityRelated = speedloaderObject.MagazineCapacity;
+                            if (MinCapacityRelated == -1) MinCapacityRelated = speedloaderObject.MagazineCapacity;
+                            else if (MinCapacityRelated > speedloaderObject.MagazineCapacity) MinCapacityRelated = speedloaderObject.MagazineCapacity;
+                        }
+                    }
                     foreach (string bullet in entry.CompatibleBullets)
                     {
                         if (IM.OD.ContainsKey(bullet) && (!firearm.CompatibleSingleRounds.Any(o => (o != null && o.ItemID == bullet))))
@@ -500,6 +584,7 @@ namespace MagazinePatcher
                 }
             }
 
+            //This part specifically fills out the IM.CompatMags dictionary for every magazine
             foreach(KeyValuePair<FireArmMagazineType, List<AmmoObjectDataTemplate>> pair in CompatibleMagazineCache.Instance.MagazineData)
             {
                 if(!IM.CompatMags.ContainsKey(pair.Key))
@@ -550,6 +635,14 @@ namespace MagazinePatcher
                         if (!blacklist[firearm.ItemID].IsRoundAllowed(firearm.CompatibleSingleRounds[i].ItemID))
                         {
                             firearm.CompatibleSingleRounds.RemoveAt(i);
+                        }
+                    }
+
+                    for (int i = firearm.CompatibleSpeedLoaders.Count - 1; i >= 0; i--)
+                    {
+                        if (!blacklist[firearm.ItemID].IsSpeedloaderAllowed(firearm.CompatibleSpeedLoaders[i].ItemID))
+                        {
+                            firearm.CompatibleSpeedLoaders.RemoveAt(i);
                         }
                     }
                 }
