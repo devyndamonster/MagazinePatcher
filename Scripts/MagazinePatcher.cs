@@ -418,10 +418,16 @@ namespace MagazinePatcher
                             continue;
                         }
 
-                        FVRFireArm firearmComp = gameObjectCallback.Result.GetComponent<FVRFireArm>();
+                        if (!IM.OD.ContainsKey(firearm.ItemID))
+                        {
+                            PatchLogger.LogWarning("Item not found in Object Dictionary! It will not be patched! ItemID: " + firearm.ItemID);
+                            continue;
+                        }
+
 
                         //If this firearm is valid, then we create a magazine cache entry for it
-                        if(firearmComp != null)
+                        FVRFireArm firearmComp = gameObjectCallback.Result.GetComponent<FVRFireArm>();
+                        if (firearmComp != null)
                         {
                             MagazineCacheEntry entry = new MagazineCacheEntry();
                             entry.FirearmID = firearm.ItemID;
@@ -444,9 +450,13 @@ namespace MagazinePatcher
 
 
                 //Now that all relevant data is saved, we should go back through all entries and add compatible ammo objects
+                PatchLogger.Log("Building Cache Entries", PatchLogger.LogType.General);
                 PatcherStatus.AppendCacheLog("Applying Changes");
                 foreach (MagazineCacheEntry entry in CompatibleMagazineCache.Instance.Entries.Values)
                 {
+                    if (!IM.OD.ContainsKey(entry.FirearmID)) continue;
+                    LastTouchedItem = entry.FirearmID;
+
                     if (CompatibleMagazineCache.Instance.MagazineData.ContainsKey(entry.MagType))
                     {
                         foreach (AmmoObjectDataTemplate magazine in CompatibleMagazineCache.Instance.MagazineData[entry.MagType])
@@ -525,6 +535,7 @@ namespace MagazinePatcher
                 if (IM.OD.ContainsKey(entry.FirearmID))
                 {
                     FVRObject firearm = IM.OD[entry.FirearmID];
+                    LastTouchedItem = entry.FirearmID;
 
                     int MaxCapacityRelated = -1;
                     int MinCapacityRelated = -1;
