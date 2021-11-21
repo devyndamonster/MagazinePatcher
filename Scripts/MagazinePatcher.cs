@@ -252,13 +252,11 @@ namespace MagazinePatcher
                     //If this magazine isn't cached, then we should store it's data
                     if (!CompatibleMagazineCache.Instance.Magazines.Contains(magazine.ItemID))
                     {
-                        CompatibleMagazineCache.Instance.Magazines.Add(magazine.ItemID);
-
                         gameObjectCallback = magazine.GetGameObjectAsync();
                         yield return AnvilManager.Instance.RunDriven(gameObjectCallback);
                         if (gameObjectCallback.Result == null)
                         {
-                            PatchLogger.LogWarning("No object was found to use FVRObject! ItemID: " + magazine.ItemID);
+                            PatchLogger.LogError("No object was found to use FVRObject! ItemID: " + magazine.ItemID);
                             continue;
                         } 
 
@@ -268,12 +266,14 @@ namespace MagazinePatcher
                         {
                             if (magComp.ObjectWrapper == null)
                             {
-                                PatchLogger.LogWarning("Object was found to have no ObjectWrapper assigned! ItemID: " + magazine.ItemID);
+                                PatchLogger.LogError("Object was found to have no ObjectWrapper assigned! ItemID: " + magazine.ItemID);
                                 continue;
                             }
 
                             CompatibleMagazineCache.Instance.AddMagazineData(magComp);
                         }
+
+                        CompatibleMagazineCache.Instance.Magazines.Add(magazine.ItemID);
                     }
                 }
 
@@ -297,13 +297,11 @@ namespace MagazinePatcher
                     //If this clip isn't cached, then we should store it's data
                     if (!CompatibleMagazineCache.Instance.Clips.Contains(clip.ItemID))
                     {
-                        CompatibleMagazineCache.Instance.Clips.Add(clip.ItemID);
-
                         gameObjectCallback = clip.GetGameObjectAsync();
                         yield return AnvilManager.Instance.RunDriven(gameObjectCallback);
                         if (gameObjectCallback.Result == null)
                         {
-                            PatchLogger.LogWarning("No object was found to use FVRObject! ItemID: " + clip.ItemID);
+                            PatchLogger.LogError("No object was found to use FVRObject! ItemID: " + clip.ItemID);
                             continue;
                         }
                         
@@ -314,12 +312,14 @@ namespace MagazinePatcher
                         {
                             if (clipComp.ObjectWrapper == null)
                             {
-                                PatchLogger.LogWarning("Object was found to have no ObjectWrapper assigned! ItemID: " + clip.ItemID);
+                                PatchLogger.LogError("Object was found to have no ObjectWrapper assigned! ItemID: " + clip.ItemID);
                                 continue;
                             }
 
                             CompatibleMagazineCache.Instance.AddClipData(clipComp);
                         }
+
+                        CompatibleMagazineCache.Instance.Clips.Add(clip.ItemID);
                     }
                 }
 
@@ -342,13 +342,11 @@ namespace MagazinePatcher
                     //If this clip isn't cached, then we should store it's data
                     if (!CompatibleMagazineCache.Instance.SpeedLoaders.Contains(speedloader.ItemID))
                     {
-                        CompatibleMagazineCache.Instance.SpeedLoaders.Add(speedloader.ItemID);
-
                         gameObjectCallback = speedloader.GetGameObjectAsync();
                         yield return AnvilManager.Instance.RunDriven(gameObjectCallback);
                         if (gameObjectCallback.Result == null)
                         {
-                            PatchLogger.LogWarning("No object was found to use FVRObject! ItemID: " + speedloader.ItemID);
+                            PatchLogger.LogError("No object was found to use FVRObject! ItemID: " + speedloader.ItemID);
                             continue;
                         }
 
@@ -357,12 +355,14 @@ namespace MagazinePatcher
                         {
                             if (speedloaderComp.ObjectWrapper == null)
                             {
-                                PatchLogger.LogWarning("Object was found to have no ObjectWrapper assigned! ItemID: " + speedloader.ItemID);
+                                PatchLogger.LogError("Object was found to have no ObjectWrapper assigned! ItemID: " + speedloader.ItemID);
                                 continue;
                             }
 
                             CompatibleMagazineCache.Instance.AddSpeedLoaderData(speedloaderComp);
                         }
+
+                        CompatibleMagazineCache.Instance.SpeedLoaders.Add(speedloader.ItemID);
                     }
                 }
 
@@ -386,13 +386,11 @@ namespace MagazinePatcher
                     //If this bullet isn't cached, then we should store it's data
                     if (!CompatibleMagazineCache.Instance.Bullets.Contains(bullet.ItemID))
                     {
-                        CompatibleMagazineCache.Instance.Bullets.Add(bullet.ItemID);
-
                         gameObjectCallback = bullet.GetGameObjectAsync();
                         yield return AnvilManager.Instance.RunDriven(gameObjectCallback);
                         if (gameObjectCallback.Result == null)
                         {
-                            PatchLogger.LogWarning("No object was found to use FVRObject! ItemID: " + bullet.ItemID);
+                            PatchLogger.LogError("No object was found to use FVRObject! ItemID: " + bullet.ItemID);
                             continue;
                         }
                         
@@ -403,12 +401,14 @@ namespace MagazinePatcher
                         {
                             if (bulletComp.ObjectWrapper == null)
                             {
-                                PatchLogger.LogWarning("Object was found to have no ObjectWrapper assigned! ItemID: " + bullet.ItemID);
+                                PatchLogger.LogError("Object was found to have no ObjectWrapper assigned! ItemID: " + bullet.ItemID);
                                 continue;
                             }
 
                             CompatibleMagazineCache.Instance.AddBulletData(bulletComp);
                         }
+
+                        CompatibleMagazineCache.Instance.Bullets.Add(bullet.ItemID);
                     }
                 }
 
@@ -432,19 +432,17 @@ namespace MagazinePatcher
                     //If this firearm isn't cached, then we should store it's data
                     if (!CompatibleMagazineCache.Instance.Firearms.Contains(firearm.ItemID))
                     {
-                        CompatibleMagazineCache.Instance.Firearms.Add(firearm.ItemID);
-
                         gameObjectCallback = firearm.GetGameObjectAsync();
                         yield return AnvilManager.Instance.RunDriven(gameObjectCallback);
                         if (gameObjectCallback.Result == null)
                         {
-                            PatchLogger.LogWarning("No object was found to use FVRObject! ItemID: " + firearm.ItemID);
+                            PatchLogger.LogError("No object was found to use FVRObject! ItemID: " + firearm.ItemID);
                             continue;
                         }
 
                         if (!IM.OD.ContainsKey(firearm.ItemID))
                         {
-                            PatchLogger.LogWarning("Item not found in Object Dictionary! It will not be patched! ItemID: " + firearm.ItemID);
+                            PatchLogger.LogError("Item not found in Object Dictionary! ItemID: " + firearm.ItemID);
                             continue;
                         }
 
@@ -455,7 +453,7 @@ namespace MagazinePatcher
                         {
                             if (firearmComp.ObjectWrapper == null)
                             {
-                                PatchLogger.LogWarning("Object was found to have no ObjectWrapper assigned! ItemID: " + firearm.ItemID);
+                                PatchLogger.LogError("Object was found to have no ObjectWrapper assigned! ItemID: " + firearm.ItemID);
                                 continue;
                             }
 
@@ -476,6 +474,8 @@ namespace MagazinePatcher
 
                             CompatibleMagazineCache.Instance.Entries.Add(firearm.ItemID, entry);
                         }
+
+                        CompatibleMagazineCache.Instance.Firearms.Add(firearm.ItemID);
                     }
                 }
 
