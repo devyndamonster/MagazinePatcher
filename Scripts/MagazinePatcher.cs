@@ -266,6 +266,12 @@ namespace MagazinePatcher
 
                         if (magComp != null)
                         {
+                            if (magComp.ObjectWrapper == null)
+                            {
+                                PatchLogger.LogWarning("Object was found to have no ObjectWrapper assigned! ItemID: " + magazine.ItemID);
+                                continue;
+                            }
+
                             CompatibleMagazineCache.Instance.AddMagazineData(magComp);
                         }
                     }
@@ -306,6 +312,12 @@ namespace MagazinePatcher
 
                         if (clipComp != null)
                         {
+                            if (clipComp.ObjectWrapper == null)
+                            {
+                                PatchLogger.LogWarning("Object was found to have no ObjectWrapper assigned! ItemID: " + clip.ItemID);
+                                continue;
+                            }
+
                             CompatibleMagazineCache.Instance.AddClipData(clipComp);
                         }
                     }
@@ -343,6 +355,12 @@ namespace MagazinePatcher
                         Speedloader speedloaderComp = gameObjectCallback.Result.GetComponent<Speedloader>();
                         if (speedloaderComp != null)
                         {
+                            if (speedloaderComp.ObjectWrapper == null)
+                            {
+                                PatchLogger.LogWarning("Object was found to have no ObjectWrapper assigned! ItemID: " + speedloader.ItemID);
+                                continue;
+                            }
+
                             CompatibleMagazineCache.Instance.AddSpeedLoaderData(speedloaderComp);
                         }
                     }
@@ -383,6 +401,12 @@ namespace MagazinePatcher
 
                         if (bulletComp != null)
                         {
+                            if (bulletComp.ObjectWrapper == null)
+                            {
+                                PatchLogger.LogWarning("Object was found to have no ObjectWrapper assigned! ItemID: " + bullet.ItemID);
+                                continue;
+                            }
+
                             CompatibleMagazineCache.Instance.AddBulletData(bulletComp);
                         }
                     }
@@ -429,6 +453,13 @@ namespace MagazinePatcher
                         FVRFireArm firearmComp = gameObjectCallback.Result.GetComponent<FVRFireArm>();
                         if (firearmComp != null)
                         {
+                            if (firearmComp.ObjectWrapper == null)
+                            {
+                                PatchLogger.LogWarning("Object was found to have no ObjectWrapper assigned! ItemID: " + firearm.ItemID);
+                                continue;
+                            }
+
+
                             MagazineCacheEntry entry = new MagazineCacheEntry();
                             entry.FirearmID = firearm.ItemID;
                             entry.MagType = firearmComp.MagazineType;
