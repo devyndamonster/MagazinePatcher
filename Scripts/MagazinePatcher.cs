@@ -256,7 +256,7 @@ namespace MagazinePatcher
                         yield return AnvilManager.Instance.RunDriven(gameObjectCallback);
                         if (gameObjectCallback.Result == null)
                         {
-                            PatchLogger.LogError("No object was found to use FVRObject! ItemID: " + magazine.ItemID);
+                            PatchLogger.LogWarning("No object was found to use FVRObject! ItemID: " + magazine.ItemID);
                             continue;
                         } 
 
@@ -266,7 +266,7 @@ namespace MagazinePatcher
                         {
                             if (magComp.ObjectWrapper == null)
                             {
-                                PatchLogger.LogError("Object was found to have no ObjectWrapper assigned! ItemID: " + magazine.ItemID);
+                                PatchLogger.LogWarning("Object was found to have no ObjectWrapper assigned! ItemID: " + magazine.ItemID);
                                 continue;
                             }
 
@@ -301,7 +301,7 @@ namespace MagazinePatcher
                         yield return AnvilManager.Instance.RunDriven(gameObjectCallback);
                         if (gameObjectCallback.Result == null)
                         {
-                            PatchLogger.LogError("No object was found to use FVRObject! ItemID: " + clip.ItemID);
+                            PatchLogger.LogWarning("No object was found to use FVRObject! ItemID: " + clip.ItemID);
                             continue;
                         }
                         
@@ -312,7 +312,7 @@ namespace MagazinePatcher
                         {
                             if (clipComp.ObjectWrapper == null)
                             {
-                                PatchLogger.LogError("Object was found to have no ObjectWrapper assigned! ItemID: " + clip.ItemID);
+                                PatchLogger.LogWarning("Object was found to have no ObjectWrapper assigned! ItemID: " + clip.ItemID);
                                 continue;
                             }
 
@@ -346,7 +346,7 @@ namespace MagazinePatcher
                         yield return AnvilManager.Instance.RunDriven(gameObjectCallback);
                         if (gameObjectCallback.Result == null)
                         {
-                            PatchLogger.LogError("No object was found to use FVRObject! ItemID: " + speedloader.ItemID);
+                            PatchLogger.LogWarning("No object was found to use FVRObject! ItemID: " + speedloader.ItemID);
                             continue;
                         }
 
@@ -355,7 +355,7 @@ namespace MagazinePatcher
                         {
                             if (speedloaderComp.ObjectWrapper == null)
                             {
-                                PatchLogger.LogError("Object was found to have no ObjectWrapper assigned! ItemID: " + speedloader.ItemID);
+                                PatchLogger.LogWarning("Object was found to have no ObjectWrapper assigned! ItemID: " + speedloader.ItemID);
                                 continue;
                             }
 
@@ -390,7 +390,7 @@ namespace MagazinePatcher
                         yield return AnvilManager.Instance.RunDriven(gameObjectCallback);
                         if (gameObjectCallback.Result == null)
                         {
-                            PatchLogger.LogError("No object was found to use FVRObject! ItemID: " + bullet.ItemID);
+                            PatchLogger.LogWarning("No object was found to use FVRObject! ItemID: " + bullet.ItemID);
                             continue;
                         }
                         
@@ -401,7 +401,7 @@ namespace MagazinePatcher
                         {
                             if (bulletComp.ObjectWrapper == null)
                             {
-                                PatchLogger.LogError("Object was found to have no ObjectWrapper assigned! ItemID: " + bullet.ItemID);
+                                PatchLogger.LogWarning("Object was found to have no ObjectWrapper assigned! ItemID: " + bullet.ItemID);
                                 continue;
                             }
 
@@ -436,13 +436,13 @@ namespace MagazinePatcher
                         yield return AnvilManager.Instance.RunDriven(gameObjectCallback);
                         if (gameObjectCallback.Result == null)
                         {
-                            PatchLogger.LogError("No object was found to use FVRObject! ItemID: " + firearm.ItemID);
+                            PatchLogger.LogWarning("No object was found to use FVRObject! ItemID: " + firearm.ItemID);
                             continue;
                         }
 
                         if (!IM.OD.ContainsKey(firearm.ItemID))
                         {
-                            PatchLogger.LogError("Item not found in Object Dictionary! ItemID: " + firearm.ItemID);
+                            PatchLogger.LogWarning("Item not found in Object Dictionary! ItemID: " + firearm.ItemID);
                             continue;
                         }
 
@@ -453,7 +453,7 @@ namespace MagazinePatcher
                         {
                             if (firearmComp.ObjectWrapper == null)
                             {
-                                PatchLogger.LogError("Object was found to have no ObjectWrapper assigned! ItemID: " + firearm.ItemID);
+                                PatchLogger.LogWarning("Object was found to have no ObjectWrapper assigned! ItemID: " + firearm.ItemID);
                                 continue;
                             }
 
@@ -560,12 +560,43 @@ namespace MagazinePatcher
         /// <param name="blacklist"></param>
         private static void ApplyMagazineCache(CompatibleMagazineCache magazineCache)
         {
+
+            //This part fills out the IM.CompatMags dictionary for every magazine, and populates the magazines properties
+            foreach (KeyValuePair<FireArmMagazineType, List<AmmoObjectDataTemplate>> pair in CompatibleMagazineCache.Instance.MagazineData)
+            {
+                if (!IM.CompatMags.ContainsKey(pair.Key))
+                {
+                    IM.CompatMags.Add(pair.Key, new List<FVRObject>());
+                }
+
+                List<FVRObject> loadedMags = new List<FVRObject>();
+                foreach (AmmoObjectDataTemplate magTemplate in pair.Value)
+                {
+                    if (IM.OD.ContainsKey(magTemplate.ObjectID))
+                    {
+                        FVRObject mag = IM.OD[magTemplate.ObjectID];
+                        mag.MagazineType = pair.Key;
+                        mag.RoundType = magTemplate.RoundType;
+                        mag.MagazineCapacity = magTemplate.Capacity;
+                        loadedMags.Add(mag);
+                    }
+                }
+                IM.CompatMags[pair.Key] = loadedMags;
+            }
+
+
+
             //Apply the magazine cache values to every firearm that is loaded
             foreach (MagazineCacheEntry entry in magazineCache.Entries.Values)
             {
                 if (IM.OD.ContainsKey(entry.FirearmID))
                 {
                     FVRObject firearm = IM.OD[entry.FirearmID];
+
+                    firearm.MagazineType = entry.MagType;
+                    firearm.RoundType = entry.BulletType;
+                    firearm.ClipType = entry.ClipType;
+
                     LastTouchedItem = entry.FirearmID;
 
                     int MaxCapacityRelated = -1;
@@ -626,26 +657,7 @@ namespace MagazinePatcher
                 }
             }
 
-            //This part specifically fills out the IM.CompatMags dictionary for every magazine
-            foreach(KeyValuePair<FireArmMagazineType, List<AmmoObjectDataTemplate>> pair in CompatibleMagazineCache.Instance.MagazineData)
-            {
-                if(!IM.CompatMags.ContainsKey(pair.Key))
-                {
-                    IM.CompatMags.Add(pair.Key, new List<FVRObject>());
-                }
-
-                List<FVRObject> loadedMags = new List<FVRObject>();
-                foreach(AmmoObjectDataTemplate magTemplate in pair.Value)
-                {
-                    if (IM.OD.ContainsKey(magTemplate.ObjectID))
-                    {
-                        FVRObject mag = IM.OD[magTemplate.ObjectID];
-                        mag.MagazineType = pair.Key;
-                        loadedMags.Add(mag);
-                    }
-                }
-                IM.CompatMags[pair.Key] = loadedMags;
-            }
+            
 
         }
 
