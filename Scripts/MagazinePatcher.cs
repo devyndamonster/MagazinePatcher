@@ -593,7 +593,12 @@ namespace MagazinePatcher
                 {
                     FVRObject firearm = IM.OD[entry.FirearmID];
 
-                    firearm.MagazineType = entry.MagType;
+                    //Note, only apply magazine type if magazines exist for gun, because of some assumptions made by game code
+                    if (IM.CompatMags.ContainsKey(entry.MagType))
+                    {
+                        firearm.MagazineType = entry.MagType;
+                    }
+                    
                     firearm.RoundType = entry.BulletType;
                     firearm.ClipType = entry.ClipType;
 
